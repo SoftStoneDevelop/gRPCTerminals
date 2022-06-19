@@ -1,0 +1,58 @@
+syntax = "proto3";
+option csharp_namespace = "gRPCDefinition";
+package gRPCServiceDefinition;
+
+service gRPCService
+{
+	rpc CommandStream(stream CommandRequest) returns (stream CommandResponce);
+}
+
+message CommandRequest
+{
+	string Guid = 1;
+	ProcessType ProcessType = 2;
+	string Command = 3;
+}
+
+message CommandResponce
+{
+	string Guid = 1;
+
+	Status Status = 2;
+}
+
+enum ProcessType
+{
+	//Enqueue command to execution queue.
+	ProcessType_Queue = 0;
+
+	//Start command execution after the current command completes.
+	//Only one immediate command can be processed at a time by the server, while it is being processed all other immediate commands are rejected.
+	ProcessType_Immideatly = 1;
+}
+
+enum Status
+{
+	Status_Default = 0;
+
+	//Command enqueue to process commands
+	Status_Enqueue = 1;
+
+	//Start process command
+	Status_StartProcess = 2;
+
+	//Command in process
+	Status_InProcess = 3;
+
+	//Command Completed
+	Status_Completed = 4;
+
+	//Command Canceled
+	Status_Canceled = 5;
+
+	//Command Rejected
+	Status_Rejected = 6;
+
+	//Command Unknown
+	Status_Unknown = 7;
+}
