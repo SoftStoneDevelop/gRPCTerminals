@@ -82,51 +82,79 @@ namespace gRPCDefinition {
       get { return global::gRPCDefinition.GRPCServiceReflection.Descriptor.Services[0]; }
     }
 
-    /// <summary>Base class for server-side implementations of gRPCService</summary>
-    [grpc::BindServiceMethod(typeof(gRPCService), "BindService")]
-    public abstract partial class gRPCServiceBase
+    /// <summary>Client for gRPCService</summary>
+    public partial class gRPCServiceClient : grpc::ClientBase<gRPCServiceClient>
     {
+      /// <summary>Creates a new client for gRPCService</summary>
+      /// <param name="channel">The channel to use to make remote calls.</param>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::System.Threading.Tasks.Task CommandStream(grpc::IAsyncStreamReader<global::gRPCDefinition.CommandRequest> requestStream, grpc::IServerStreamWriter<global::gRPCDefinition.CommandResponce> responseStream, grpc::ServerCallContext context)
+      public gRPCServiceClient(grpc::ChannelBase channel) : base(channel)
       {
-        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+      /// <summary>Creates a new client for gRPCService that uses a custom <c>CallInvoker</c>.</summary>
+      /// <param name="callInvoker">The callInvoker to use to make remote calls.</param>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public gRPCServiceClient(grpc::CallInvoker callInvoker) : base(callInvoker)
+      {
+      }
+      /// <summary>Protected parameterless constructor to allow creation of test doubles.</summary>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      protected gRPCServiceClient() : base()
+      {
+      }
+      /// <summary>Protected constructor to allow creation of configured clients.</summary>
+      /// <param name="configuration">The client configuration.</param>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      protected gRPCServiceClient(ClientBaseConfiguration configuration) : base(configuration)
+      {
       }
 
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::System.Threading.Tasks.Task<global::gRPCDefinition.NullMessage> CheckStreamRemoved(grpc::IAsyncStreamReader<global::gRPCDefinition.NullMessage> requestStream, grpc::ServerCallContext context)
+      public virtual grpc::AsyncDuplexStreamingCall<global::gRPCDefinition.CommandRequest, global::gRPCDefinition.CommandResponce> CommandStream(grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
-        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+        return CommandStream(new grpc::CallOptions(headers, deadline, cancellationToken));
       }
-
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-      public virtual global::System.Threading.Tasks.Task<global::gRPCDefinition.NullMessage> CheckConection(global::gRPCDefinition.NullMessage request, grpc::ServerCallContext context)
+      public virtual grpc::AsyncDuplexStreamingCall<global::gRPCDefinition.CommandRequest, global::gRPCDefinition.CommandResponce> CommandStream(grpc::CallOptions options)
       {
-        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+        return CallInvoker.AsyncDuplexStreamingCall(__Method_CommandStream, null, options);
       }
-
-    }
-
-    /// <summary>Creates service definition that can be registered with a server</summary>
-    /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
-    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    public static grpc::ServerServiceDefinition BindService(gRPCServiceBase serviceImpl)
-    {
-      return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_CommandStream, serviceImpl.CommandStream)
-          .AddMethod(__Method_CheckStreamRemoved, serviceImpl.CheckStreamRemoved)
-          .AddMethod(__Method_CheckConection, serviceImpl.CheckConection).Build();
-    }
-
-    /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
-    /// Note: this method is part of an experimental API that can change or be removed without any prior notice.</summary>
-    /// <param name="serviceBinder">Service methods will be bound by calling <c>AddMethod</c> on this object.</param>
-    /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
-    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
-    public static void BindService(grpc::ServiceBinderBase serviceBinder, gRPCServiceBase serviceImpl)
-    {
-      serviceBinder.AddMethod(__Method_CommandStream, serviceImpl == null ? null : new grpc::DuplexStreamingServerMethod<global::gRPCDefinition.CommandRequest, global::gRPCDefinition.CommandResponce>(serviceImpl.CommandStream));
-      serviceBinder.AddMethod(__Method_CheckStreamRemoved, serviceImpl == null ? null : new grpc::ClientStreamingServerMethod<global::gRPCDefinition.NullMessage, global::gRPCDefinition.NullMessage>(serviceImpl.CheckStreamRemoved));
-      serviceBinder.AddMethod(__Method_CheckConection, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::gRPCDefinition.NullMessage, global::gRPCDefinition.NullMessage>(serviceImpl.CheckConection));
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncClientStreamingCall<global::gRPCDefinition.NullMessage, global::gRPCDefinition.NullMessage> CheckStreamRemoved(grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return CheckStreamRemoved(new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncClientStreamingCall<global::gRPCDefinition.NullMessage, global::gRPCDefinition.NullMessage> CheckStreamRemoved(grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncClientStreamingCall(__Method_CheckStreamRemoved, null, options);
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::gRPCDefinition.NullMessage CheckConection(global::gRPCDefinition.NullMessage request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return CheckConection(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::gRPCDefinition.NullMessage CheckConection(global::gRPCDefinition.NullMessage request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_CheckConection, null, options, request);
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::gRPCDefinition.NullMessage> CheckConectionAsync(global::gRPCDefinition.NullMessage request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return CheckConectionAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::gRPCDefinition.NullMessage> CheckConectionAsync(global::gRPCDefinition.NullMessage request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_CheckConection, null, options, request);
+      }
+      /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      protected override gRPCServiceClient NewInstance(ClientBaseConfiguration configuration)
+      {
+        return new gRPCServiceClient(configuration);
+      }
     }
 
   }

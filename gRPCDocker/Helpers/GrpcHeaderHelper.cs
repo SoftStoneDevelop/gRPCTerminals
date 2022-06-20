@@ -1,10 +1,10 @@
 ﻿using Grpc.Core;
 
-namespace gRPCServer.Helpers
+namespace Server.Helpers
 {
     internal static class GrpcHeaderHelper
     {
-        public static Guid GetGuidFromHeaderOrThrowCancellCallException(ServerCallContext context)
+        public static string GetGuidFromHeaderOrThrowCancellCallException(ServerCallContext context)
         {
             var guidStr = context.RequestHeaders.GetValue("guid");
 
@@ -18,7 +18,7 @@ namespace gRPCServer.Helpers
                 throw new RpcException(new Status(StatusCode.Cancelled, "Guid is not valid"));
             }
 
-            return guid;
+            return guid.ToString();
         }
     }
 }

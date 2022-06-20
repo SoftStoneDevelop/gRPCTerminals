@@ -5,6 +5,13 @@ package gRPCServiceDefinition;
 service gRPCService
 {
 	rpc CommandStream(stream CommandRequest) returns (stream CommandResponce);
+
+	rpc CheckStreamRemoved (stream NullMessage) returns (NullMessage);
+	rpc CheckConection (NullMessage) returns (NullMessage);
+}
+
+message NullMessage
+{
 }
 
 message CommandRequest

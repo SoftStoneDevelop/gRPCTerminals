@@ -1,19 +1,20 @@
 ﻿using Grpc.Core;
 using gRPCDefinition;
-using gRPCServer.Impl;
+using Server.Impl;
 
-namespace gRPCServer
+namespace Server
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            if (args.Length < 1)
-            {
-                throw new ArgumentException($"Expected minimum arguments count 1");
-            }
+            //if (args.Length < 1)
+            //{
+            //    throw new ArgumentException($"Expected minimum arguments count 1");
+            //}
 
-            var host = args[0];
+            //var host = args[0];
+            var host = "127.0.0.1";
             Console.WriteLine($"Using Host={host}");
 
             int port;
@@ -23,8 +24,8 @@ namespace gRPCServer
             }
             else
             {
-                Console.WriteLine("Using default Port=4823");
-                port = 4823;
+                port = 6024;
+                Console.WriteLine($"Using default Port={port}");
             }
 
             var options =
@@ -38,7 +39,7 @@ namespace gRPCServer
             var service = new ServerService(processor);
 
             var grpcDBServer =
-                new Server(options)
+                new Grpc.Core.Server(options)
                 {
                     Services = { gRPCService.BindService(service) },
                     Ports = { new ServerPort(host, port, ServerCredentials.Insecure) },

@@ -1,12 +1,26 @@
 ﻿using gRPCDefinition;
-using gRPCServer.Interfaces;
+using Server.Interfaces;
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 
-namespace gRPCServer.Impl
+namespace Server.Impl
 {
     public class CommandProcessor : ICommandProcessor, IDisposable
     {
+        private class CommandWrapper
+        {
+            public CommandWrapper(
+                string guidTerminal,
+                CommandRequest command)
+            {
+                GuidTerminal = guidTerminal;
+                Command = command;
+            }
+
+            public string GuidTerminal;
+            public CommandRequest Command;
+        }
+
         public CommandProcessor()
         {
             Initialize();
@@ -17,16 +31,42 @@ namespace gRPCServer.Impl
             _cts = new CancellationTokenSource();
             _mres = new ManualResetEvent(false);
             _routine =
-                Task.Factory.StartNew(() =>
+                Task.Factory.StartNew(async () =>
                 {
                     while (!_cts.IsCancellationRequested)
                     {
+                        CommandWrapper immediateCommand = null;
                         while (_commandRequests.TryDequeue(out var request))
                         {
                             if (_cts.IsCancellationRequested)
                                 return;
 
+                            if (_clientTerminals.TryGetValue(request.GuidTerminal, out var terminal))
+                            {
+                                var startProcessing = new CommandResponce();
+                                startProcessing.Guid = request.Command.Guid;
+                                startProcessing.Status = Status.StartProcess;
+                                await terminal.Writer.WriteAsync(startProcessing, _cts.Token);
+
+                                //TODO processing
+
+                                var endProcessing = new CommandResponce();
+                                endProcessing.Guid = request.Command.Guid;
+                                endProcessing.Status = Status.Completed;
+                                await terminal.Writer.WriteAsync(endProcessing, _cts.Token);
+                            }
+
+                            immediateCommand = Volatile.Read(ref _immediateCommand);
+                            if (immediateCommand != null)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (immediateCommand != null)
+                        {
                             //TODO processing
+                            Interlocked.Exchange(ref immediateCommand, null);
                         }
 
                         if (!_commandRequests.IsEmpty)
@@ -41,14 +81,44 @@ namespace gRPCServer.Impl
                 }, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        public void EnqueueCommand(CommandRequest command)
+        public void AddImmidiateCommand(string guidTerminal, CommandRequest command)
         {
-            _commandRequests.Enqueue(command);
+            lock(_addLock)
+            {
+                var currentCommand = Volatile.Read(ref _immediateCommand);
+                if(currentCommand != null)
+                {
+                    if (_clientTerminals.TryGetValue(guidTerminal, out var terminal))
+                    {
+                        var rejected = new CommandResponce
+                        {
+                            Guid = command.Guid,
+                            Status = Status.Rejected
+                        };
+                        terminal.Writer.WriteAsync(rejected, _cts.Token).AsTask().Wait();
+                    }
+                }
+                else
+                {
+                    _immediateCommand = new(guidTerminal, command);
+                }
+            }
+        }
+
+        public void EnqueueCommand(string guidTerminal, CommandRequest command)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
+
+            _commandRequests.Enqueue(new (guidTerminal, command));
             _mres.Set();
         }
 
-        public bool AddClientTerminal(Guid guid, out ChannelReader<CommandResponce> reader)
+        public bool AddClientTerminal(string guid, out ChannelReader<CommandResponce> reader)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
+
             var channel = Channel.CreateUnbounded<CommandResponce>(new UnboundedChannelOptions { SingleWriter = true, SingleReader = true });
             if (_clientTerminals.TryAdd(guid, channel))
             {
@@ -62,8 +132,11 @@ namespace gRPCServer.Impl
             }
         }
 
-        public bool DestroyClientTerminal(Guid guid)
+        public bool DestroyClientTerminal(string guid)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
+
             if (_clientTerminals.TryRemove(guid, out _))
             {
                 return true;
@@ -96,6 +169,7 @@ namespace gRPCServer.Impl
                 try
                 {
                     _routine.Wait();
+                    _routine = null;
                 }
                 catch { /*ignore*/ }
 
@@ -123,11 +197,14 @@ namespace gRPCServer.Impl
 
         #endregion
 
-        private readonly ConcurrentQueue<CommandRequest> _commandRequests = new();
-        private readonly ConcurrentDictionary<Guid, Channel<CommandResponce>> _clientTerminals = new();
+        private readonly ConcurrentQueue<CommandWrapper> _commandRequests = new();
+        private readonly ConcurrentDictionary<string, Channel<CommandResponce>> _clientTerminals = new();
 
         private Task _routine;
         private CancellationTokenSource _cts;
         private ManualResetEvent _mres;
+
+        private readonly object _addLock = new ();
+        private CommandWrapper _immediateCommand;
     }
 }

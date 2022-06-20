@@ -1,13 +1,13 @@
 ﻿using Grpc.Core;
 using gRPCDefinition;
-using gRPCServer.Helpers;
-using gRPCServer.Interfaces;
+using Server.Helpers;
+using Server.Interfaces;
 
-namespace gRPCServer
+namespace Server
 {
-    public class ServerService : gRPCService.gRPCServiceBase
+    internal class ServerService : gRPCService.gRPCServiceBase
     {
-        ICommandProcessor _commandProcessor;
+        private readonly ICommandProcessor _commandProcessor;
 
         public ServerService(ICommandProcessor commandProcessor)
         {
@@ -23,6 +23,7 @@ namespace gRPCServer
             return Task.Factory.StartNew(async () =>
             {
                 var guid = GrpcHeaderHelper.GetGuidFromHeaderOrThrowCancellCallException(context);
+                Console.WriteLine($"Client with guid '{guid}': Connected");
                 if(!_commandProcessor.AddClientTerminal(guid, out var channel))
                 {
                     throw new RpcException(new Grpc.Core.Status(StatusCode.InvalidArgument, "Invalid guid, duplicate client terminals"));
@@ -33,7 +34,16 @@ namespace gRPCServer
                     {
                         while (!context.CancellationToken.IsCancellationRequested && await requestStream.MoveNext())
                         {
-                            _commandProcessor.EnqueueCommand(requestStream.Current);
+                            var current = requestStream.Current;
+                            Console.WriteLine($"Got a command '{current.Guid}': {current.Command}");
+                            if(current.ProcessType == ProcessType.Immideatly)
+                            {
+                                _commandProcessor.AddImmidiateCommand(guid, requestStream.Current);
+                            }
+                            else
+                            {
+                                _commandProcessor.EnqueueCommand(guid, requestStream.Current);
+                            }
                         }
                     }, context.CancellationToken);
 
@@ -41,13 +51,31 @@ namespace gRPCServer
                     while (!context.CancellationToken.IsCancellationRequested && await channel.WaitToReadAsync(context.CancellationToken))
                     {
                         var current = await channel.ReadAsync(context.CancellationToken);
+                        await responseStream.WriteAsync(current);
                     }
                 }
                 finally
                 {
                     _commandProcessor.DestroyClientTerminal(guid);
                 }
+                Console.WriteLine($"Client with guid '{guid}': Disconnected");
             });
+        }
+
+        public override Task<NullMessage> CheckConection(NullMessage request, ServerCallContext context)
+        {
+            GrpcHeaderHelper.GetGuidFromHeaderOrThrowCancellCallException(context);
+            return Task.FromResult(new NullMessage());
+        }
+
+        public override async Task<NullMessage> CheckStreamRemoved(IAsyncStreamReader<NullMessage> requestStream, ServerCallContext context)
+        {
+            while (await requestStream.MoveNext(context.CancellationToken).ConfigureAwait(false))
+            {
+                Console.WriteLine("Ping");
+            }
+
+            return new NullMessage();
         }
     }
 }
