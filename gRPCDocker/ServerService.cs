@@ -32,7 +32,7 @@ namespace Server
                 {
                     var taskRequest = Task.Factory.StartNew(async () =>
                     {
-                        while (!context.CancellationToken.IsCancellationRequested && await requestStream.MoveNext())
+                        while (await requestStream.MoveNext(context.CancellationToken))
                         {
                             var current = requestStream.Current;
                             Console.WriteLine($"Got a command '{current.Guid}': {current.Command}");
@@ -47,8 +47,7 @@ namespace Server
                         }
                     }, context.CancellationToken);
 
-
-                    while (!context.CancellationToken.IsCancellationRequested && await channel.WaitToReadAsync(context.CancellationToken))
+                    while(!context.CancellationToken.IsCancellationRequested)
                     {
                         var current = await channel.ReadAsync(context.CancellationToken);
                         await responseStream.WriteAsync(current);
@@ -72,7 +71,6 @@ namespace Server
         {
             while (await requestStream.MoveNext(context.CancellationToken).ConfigureAwait(false))
             {
-                Console.WriteLine("Ping");
             }
 
             return new NullMessage();
