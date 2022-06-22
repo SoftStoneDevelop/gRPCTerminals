@@ -1,4 +1,6 @@
-﻿namespace ClientTerminal
+﻿using System;
+
+namespace ClientTerminal
 {
     internal class Program
     {

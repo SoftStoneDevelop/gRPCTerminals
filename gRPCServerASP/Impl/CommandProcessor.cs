@@ -1,9 +1,12 @@
 ﻿using gRPCDefinition;
-using Server.Interfaces;
+using gRPCServer.Interfaces;
+using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
-namespace Server.Impl
+namespace gRPCServer.Impl
 {
     public class CommandProcessor : ICommandProcessor, IDisposable
     {

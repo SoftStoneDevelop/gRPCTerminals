@@ -1,6 +1,11 @@
 ﻿using Grpc.Core;
+using Grpc.Net.Client;
 using gRPCDefinition;
+using System;
 using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClientTerminal
 {
@@ -13,7 +18,14 @@ namespace ClientTerminal
             )
         {
             _headersMetadata = new Metadata() { { "guid", guid } };
-            _channel = new Channel(host, port, ChannelCredentials.Insecure);
+
+            var uriBuilder = new UriBuilder
+            {
+                Port = port,
+                Host = host
+            };
+
+            _channel = GrpcChannel.ForAddress(uriBuilder.Uri, new GrpcChannelOptions() { Credentials = ChannelCredentials.Insecure });
             _client = new gRPCService.gRPCServiceClient(_channel);
 
             var taskConnect = _channel.ConnectAsync();
@@ -104,7 +116,7 @@ namespace ClientTerminal
                             throw;
                     }
                 }
-            }, _ctsStream.Token);
+            });
         }
 
         private void CreateRequestStreamRoutine()
@@ -219,7 +231,7 @@ namespace ClientTerminal
         #endregion
 
         private readonly Metadata _headersMetadata;
-        private readonly Channel _channel;
+        private readonly GrpcChannel _channel;
         private readonly gRPCService.gRPCServiceClient _client;
 
         private readonly NullMessage _nullMessage = new();
@@ -230,8 +242,8 @@ namespace ClientTerminal
         private CancellationTokenSource _ctsStream;
         private Task _responceStreamRoutine;
         private Task _requestStreamRoutine;
-        private ConcurrentQueue<CommandRequest> _queue = new();
-        private ManualResetEvent _mre = new(false);
+        private readonly ConcurrentQueue<CommandRequest> _queue = new();
+        private readonly ManualResetEvent _mre = new(false);
 
         private readonly CancellationTokenSource _cts;
     }
