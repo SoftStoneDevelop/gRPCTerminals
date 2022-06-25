@@ -38,7 +38,6 @@ namespace Server.Impl
                 {
                     while (!_cts.IsCancellationRequested)
                     {
-                        CommandWrapper immediateCommand = null;
                         while (_commandRequests.TryDequeue(out var request))
                         {
                             if (_cts.IsCancellationRequested)
@@ -59,17 +58,16 @@ namespace Server.Impl
                                 await terminal.Writer.WriteAsync(endProcessing, _cts.Token);
                             }
 
-                            immediateCommand = Volatile.Read(ref _immediateCommand);
-                            if (immediateCommand != null)
+                            if (_immediateCommand != null)
                             {
                                 break;
                             }
                         }
 
-                        if (immediateCommand != null)
+                        if (_immediateCommand != null)
                         {
                             //TODO processing
-                            Interlocked.Exchange(ref immediateCommand, null);
+                            Interlocked.Exchange(ref _immediateCommand, null);
                         }
 
                         if (!_commandRequests.IsEmpty)
@@ -88,8 +86,7 @@ namespace Server.Impl
         {
             lock(_addLock)
             {
-                var currentCommand = Volatile.Read(ref _immediateCommand);
-                if(currentCommand != null)
+                if(_immediateCommand != null)
                 {
                     if (_clientTerminals.TryGetValue(guidTerminal, out var terminal))
                     {
@@ -208,6 +205,6 @@ namespace Server.Impl
         private ManualResetEvent _mres;
 
         private readonly object _addLock = new ();
-        private CommandWrapper _immediateCommand;
+        private volatile CommandWrapper _immediateCommand;
     }
 }

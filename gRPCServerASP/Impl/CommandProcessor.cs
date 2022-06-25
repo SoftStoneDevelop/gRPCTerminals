@@ -38,7 +38,6 @@ namespace gRPCServer.Impl
                 {
                     while (!_cts.IsCancellationRequested)
                     {
-                        CommandWrapper immediateCommand = null;
                         while (_commandRequests.TryDequeue(out var request))
                         {
                             if (_cts.IsCancellationRequested)
@@ -59,17 +58,16 @@ namespace gRPCServer.Impl
                                 await terminal.Writer.WriteAsync(endProcessing, _cts.Token);
                             }
 
-                            immediateCommand = Volatile.Read(ref _immediateCommand);
-                            if (immediateCommand != null)
+                            if (_immediateCommand != null)
                             {
                                 break;
                             }
                         }
 
-                        if (immediateCommand != null)
+                        if (_immediateCommand != null)
                         {
                             //TODO processing
-                            Interlocked.Exchange(ref immediateCommand, null);
+                            Interlocked.Exchange(ref _immediateCommand, null);
                         }
 
                         if (!_commandRequests.IsEmpty)
@@ -86,10 +84,9 @@ namespace gRPCServer.Impl
 
         public void AddImmidiateCommand(string guidTerminal, CommandRequest command)
         {
-            lock(_addLock)
+            lock (_addLock)
             {
-                var currentCommand = Volatile.Read(ref _immediateCommand);
-                if(currentCommand != null)
+                if (_immediateCommand != null)
                 {
                     if (_clientTerminals.TryGetValue(guidTerminal, out var terminal))
                     {
@@ -113,7 +110,7 @@ namespace gRPCServer.Impl
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
 
-            _commandRequests.Enqueue(new (guidTerminal, command));
+            _commandRequests.Enqueue(new(guidTerminal, command));
             _mres.Set();
         }
 
@@ -207,7 +204,7 @@ namespace gRPCServer.Impl
         private CancellationTokenSource _cts;
         private ManualResetEvent _mres;
 
-        private readonly object _addLock = new ();
-        private CommandWrapper _immediateCommand;
+        private readonly object _addLock = new();
+        private volatile CommandWrapper _immediateCommand;
     }
 }
