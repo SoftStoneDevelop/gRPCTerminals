@@ -10,6 +10,7 @@ namespace gRPCServer
     internal class ServerService : gRPCService.gRPCServiceBase
     {
         private readonly ICommandProcessor _commandProcessor;
+        private readonly NullMessage _message = new();
 
         public ServerService(ICommandProcessor commandProcessor)
         {
@@ -50,7 +51,7 @@ namespace gRPCServer
                 while (!context.CancellationToken.IsCancellationRequested)
                 {
                     var current = await channel.ReadAsync(context.CancellationToken);
-                    await responseStream.WriteAsync(current);
+                    await responseStream.WriteAsync(current, context.CancellationToken);
                 }
             }
             catch(OperationCanceledException)
@@ -67,7 +68,7 @@ namespace gRPCServer
         public override Task<NullMessage> CheckConection(NullMessage request, ServerCallContext context)
         {
             GrpcHeaderHelper.GetGuidFromHeaderOrThrowCancellCallException(context);
-            return Task.FromResult(new NullMessage());
+            return Task.FromResult(_message);
         }
 
         public override async Task<NullMessage> CheckStreamRemoved(IAsyncStreamReader<NullMessage> requestStream, ServerCallContext context)
@@ -83,7 +84,7 @@ namespace gRPCServer
                 //ignore
             }
 
-            return new NullMessage();
+            return _message;
         }
     }
 }
