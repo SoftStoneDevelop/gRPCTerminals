@@ -61,8 +61,8 @@ namespace gRPCServer
             finally
             {
                 _commandProcessor.DestroyClientTerminal(guid);
+                Console.WriteLine($"Client with guid '{guid}': Disconnected");
             }
-            Console.WriteLine($"Client with guid '{guid}': Disconnected");
         }
 
         public override Task<NullMessage> CheckConection(NullMessage request, ServerCallContext context)

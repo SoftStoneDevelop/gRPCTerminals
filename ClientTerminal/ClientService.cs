@@ -51,7 +51,7 @@ namespace ClientTerminal
                         {
                             _checkStreamRemoved.RequestStream.WriteAsync(_nullMessage).Wait();
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             Console.WriteLine("Disconnected to Server");
 
@@ -61,7 +61,7 @@ namespace ClientTerminal
                                 ReCreateCommandStream();
                                 CreateResponceStreamRoutine();
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                                 //ignore
                             }
@@ -110,9 +110,8 @@ namespace ClientTerminal
                         }
                     }
                     catch (TaskCanceledException) { /*Ignore*/}
-                    catch (AggregateException aggEx) 
+                    catch (AggregateException aggEx) when (aggEx.InnerExceptions.Any(ex => ex is not OperationCanceledException))
                     {
-                        if (aggEx.InnerExceptions.Any(ex => ex is not OperationCanceledException))
                             throw;
                     }
                 }
@@ -142,7 +141,7 @@ namespace ClientTerminal
                                 sended = true;
                                 Console.WriteLine($"Sended command '{item.Guid}': {item.Command}");
                             }
-                            catch (TaskCanceledException) { /*Ignore*/}
+                            catch (OperationCanceledException) { /*Ignore*/}
                             catch (AggregateException aggEx)
                             {
                                 if (aggEx.InnerExceptions.Any(ex => ex is not OperationCanceledException))
